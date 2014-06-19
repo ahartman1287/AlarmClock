@@ -49,4 +49,8 @@ class SevenSegment:
       self.disp.setBufferRow(2, 0xFFFF)
     else:
       self.disp.setBufferRow(2, 0)
+  
+  def setBrightLevel(self, brightnessLevel):
+    #Sets brightness level of display
+    self.disp.setBrightness(brightnessLevel)  
 
