@@ -18,14 +18,19 @@ while(True):
   minute = now.minute
   second = now.second
   # Set hours
-  segment.writeDigit(0, int(minute / 10))     # Tens
-  segment.writeDigit(1, minute % 10)          # Ones
+  #segment.writeDigit(0, int(minute / 10))     # Tens
+  #segment.writeDigit(1, minute % 10)          # Ones
   # Set minutes
-  segment.writeDigit(3, int(second / 10))   # Tens
-  segment.writeDigit(4, second % 10)        # Ones
+  #segment.writeDigit(3, int(second / 10))   # Tens
+  #segment.writeDigit(4, second % 10)        # Ones
   # Toggle color
   #segment.setColon(second % 2)              # Toggle colon at 1Hz
   # Toggle brightness
-  segment.setBrightLevel(second % 15)
+  #segment.setBrightLevel(second % 15)
   # Wait one second
-  time.sleep(1)
+  #time.sleep(1)
+  segment.writeDigit(0,1)
+  segment.writeDigit(1,9)
+  segment.writeDigit(3,8)
+  segment.writeDigit(4,7)
+  time.sleep(10)
