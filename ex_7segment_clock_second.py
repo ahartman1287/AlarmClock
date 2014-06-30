@@ -1,22 +1,95 @@
 #!/usr/bin/python
 
-import time
+import time,sys, traceback
 import datetime
+import re,decimal
 from Adafruit_7Segment import SevenSegment
+import urllib2
 
-# ===========================================================================
-# Clock Example
-# ===========================================================================
-segment = SevenSegment(address=0x70)
+from xml.dom.minidom import parseString
 
-print "Press CTRL+Z to exit"
+def ExtractQuotes(line):
+    r= re.compile('([^ =]+) *= *("[^"]*"|[^ ]*)')
 
+    d= {}
+    for k, v in r.findall(line):
+            if v[:1]=='"':
+                 d[k]= v[1:-1]
+            else:
+                d[k]= decimal.Decimal(v)
+
+    return d
+def ParseTeamNames():
+    #determine date to feed to API call
+    today=datetime.date.today()
+    year= today.year
+    month = today.month
+    day = today.day
+    if month < 10:
+        TodaysDate=str(year)+"/0"+str(month)+"/"+str(day)
+    else:
+        TodaysDate=str(year)+"/"+str(month)+"/"+str(day)
+
+    #call to API and dump schedule information into xmlData
+    URL="http://api.sportsdatallc.org/soccer-t2/wc/matches/"+TodaysDate+"/schedule.xml?api_key=mepmajrhpw8k362c7uuhsctd"
+    file=urllib2.urlopen(URL)
+    data = file.read()
+    file.close()
+    dom = parseString(data)
+    xmlTag = dom.getElementsByTagName('matches')[0].toxml()
+    xmlData=xmlTag.replace('<matches>','').replace('</tagName>','')
+
+    #dump current schedule information to text file named schedule.txt
+    FileToSave=open("schedule.txt","w")
+    FileToSave.write(xmlData)
+    FileToSave.close()
+    NumberofGames=0
+
+    with open ("schedule.txt") as f:
+        for line in f:
+            if line.startswith("      <home alias"):
+                HomeArray=ExtractQuotes(line)
+                HomeTeam=HomeArray['name']
+                NumberofGames=NumberofGames + 0.5
+
+            if line.startswith("      <away alias"):
+                AwayArray=ExtractQuotes(line)
+                AwayTeam=AwayArray['name']
+                NumberofGames=NumberofGames + 0.5
+
+                print  "Game #"+ str(NumberofGames)[:1]
+                print "Home Team: "+ str(HomeTeam) + " VS  Away Team: " + str(AwayTeam) + "\n"
+
+
+            if 'str' in line:
+                break
+    if NumberofGames >=1:
+        try:
+            GameSelect=int(raw_input("Please select game # to follow:"))
+        except ValueError:
+            print "Not a valid number!"
+            sys.exit(0)
+        if GameSelect > NumberofGames or GameSelect < 1:
+                print "not a valid entry!"
+        Getscores(GameSelect)
+    else:
+        print "No games todays, sorry!"
+
+def Getscores(GameNumber):
+
+    print "Fetching scores..."
+
+
+
+
+
+#segment = SevenSegment(address=0x70)
 # Continually update the time on a 4 char, 7-segment display
-while(True):
-  now = datetime.datetime.now()
-  hour = now.hour
-  minute = now.minute
-  second = now.second
+#while(True):
+  #now = datetime.datetime.now()
+  #hour = now.hour
+  #minute = 61
+  #second = 30
   # Set hours
   #segment.writeDigit(0, int(minute / 10))     # Tens
   #segment.writeDigit(1, minute % 10)          # Ones
@@ -29,8 +102,11 @@ while(True):
   #segment.setBrightLevel(second % 15)
   # Wait one second
   #time.sleep(1)
-  segment.writeDigit(0,1)
-  segment.writeDigit(1,9)
-  segment.writeDigit(3,8)
-  segment.writeDigit(4,7)
-  time.sleep(10)
+ # segment.writeDigit(0,int(minute/10))
+ # segment.writeDigit(1,minute % 10)
+ # segment.writeDigit(3, int(second/10))
+ # segment.writeDigit(4,second % 10)
+
+
+ParseTeamNames()
+
