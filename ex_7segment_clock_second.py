@@ -44,9 +44,15 @@ def ParseTeamNames():
     FileToSave.write(xmlData)
     FileToSave.close()
     NumberofGames=0
-
+    NumberofMatches=0
+    MatchId=[]
     with open ("schedule.txt") as f:
         for line in f:
+
+            if line.startswith("    <match id"):
+                MatchId.append(ExtractQuotes(line))
+                NumberofMatches=NumberofMatches +1
+
             if line.startswith("      <home alias"):
                 HomeArray=ExtractQuotes(line)
                 HomeTeam=HomeArray['name']
@@ -56,7 +62,6 @@ def ParseTeamNames():
                 AwayArray=ExtractQuotes(line)
                 AwayTeam=AwayArray['name']
                 NumberofGames=NumberofGames + 0.5
-
                 print  "Game #"+ str(NumberofGames)[:1]
                 print "Home Team: "+ str(HomeTeam) + " VS  Away Team: " + str(AwayTeam) + "\n"
 
@@ -71,19 +76,34 @@ def ParseTeamNames():
             sys.exit(0)
         if GameSelect > NumberofGames or GameSelect < 1:
                 print "not a valid entry!"
-        Getscores(GameSelect)
+        GetScores(MatchId[GameSelect-1])
     else:
         print "No games todays, sorry!"
 
-def Getscores(GameNumber):
+def GetScores(MatchIdDictionary):
 
     print "Fetching scores..."
+    MatchId= MatchIdDictionary['id']
+    URLForMatch = "http://api.sportsdatallc.org/soccer-t2/wc/matches/"+str(MatchId)+"/boxscore.xml?api_key=mepmajrhpw8k362c7uuhsctd"
+    file=urllib2.urlopen(URLForMatch)
+    data = file.read()
+    file.close()
+    dom = parseString(data)
+    xmlTag = dom.getElementsByTagName('matches')[0].toxml()
+    xmlData=xmlTag.replace('<matches>','').replace('</tagName>','')
 
+    FileToSave=open("GameXml.txt","w")
+    FileToSave.write(xmlData)
+    FileToSave.close()
+    with open ("GameXml.txt") as f:
+        for line in f:
+            #print line
+            if line.startswith("        <leg away_id"):
+                MatchScore=ExtractQuotes(line)
+                HomeScore=MatchScore['home_score']
+                AwayScore=MatchScore['away_score']
 
-
-
-
-#segment = SevenSegment(address=0x70)
+    segment = SevenSegment(address=0x70)
 # Continually update the time on a 4 char, 7-segment display
 #while(True):
   #now = datetime.datetime.now()
@@ -102,10 +122,11 @@ def Getscores(GameNumber):
   #segment.setBrightLevel(second % 15)
   # Wait one second
   #time.sleep(1)
- # segment.writeDigit(0,int(minute/10))
- # segment.writeDigit(1,minute % 10)
- # segment.writeDigit(3, int(second/10))
- # segment.writeDigit(4,second % 10)
+
+    segment.writeDigit(0,int(HomeScore)/10)
+    segment.writeDigit(1,int(HomeScore) % 10)
+    segment.writeDigit(3, int(AwayScore)/10)
+    segment.writeDigit(4,int(AwayScore) % 10)
 
 
 ParseTeamNames()
