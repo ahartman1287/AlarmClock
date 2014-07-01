@@ -3,7 +3,7 @@
 import time,sys, traceback
 import datetime
 import re,decimal
-from Adafruit_7Segment import SevenSegment
+#from Adafruit_7Segment import SevenSegment
 import urllib2
 
 from xml.dom.minidom import parseString
@@ -76,13 +76,13 @@ def ParseTeamNames():
             sys.exit(0)
         if GameSelect > NumberofGames or GameSelect < 1:
                 print "not a valid entry!"
+        print "Fetching scores..."
         GetScores(MatchId[GameSelect-1])
     else:
         print "No games todays, sorry!"
 
 def GetScores(MatchIdDictionary):
 
-    print "Fetching scores..."
     MatchId= MatchIdDictionary['id']
     URLForMatch = "http://api.sportsdatallc.org/soccer-t2/wc/matches/"+str(MatchId)+"/boxscore.xml?api_key=mepmajrhpw8k362c7uuhsctd"
     file=urllib2.urlopen(URLForMatch)
@@ -102,8 +102,28 @@ def GetScores(MatchIdDictionary):
                 MatchScore=ExtractQuotes(line)
                 HomeScore=MatchScore['home_score']
                 AwayScore=MatchScore['away_score']
+    
+    #determine whether game is live or not
+    if (MatchScore['status']=="inprogress"):
+        isGameLive=1
+    elif (MatchScore['status']=="closed"):
+        isGameLive=1
+    else:
+        print "Cannot parse current game status"
+    
+    DisplayScores(HomeScore,AwayScore,MatchIdDictionary,isGameLive)
 
-    segment = SevenSegment(address=0x70)
+def DisplayScores(HomeScore,AwayScore,MatchDictionary,isGameLive):
+    
+    while(isGameLive==True):
+        print "SCORE: "+ str(HomeScore) + " TO " + str(AwayScore)
+        time.sleep(5)
+        GetScores(MatchDictionary)
+    #just print game score just once if game is not live
+    print "SCORE: "+ str(HomeScore) + " TO " + str(AwayScore)
+
+
+#segment = SevenSegment(address=0x70)
 # Continually update the time on a 4 char, 7-segment display
 #while(True):
   #now = datetime.datetime.now()
@@ -123,10 +143,10 @@ def GetScores(MatchIdDictionary):
   # Wait one second
   #time.sleep(1)
 
-    segment.writeDigit(0,int(HomeScore)/10)
-    segment.writeDigit(1,int(HomeScore) % 10)
-    segment.writeDigit(3, int(AwayScore)/10)
-    segment.writeDigit(4,int(AwayScore) % 10)
+#    segment.writeDigit(0,int(HomeScore)/10)
+#    segment.writeDigit(1,int(HomeScore) % 10)
+#    segment.writeDigit(3, int(AwayScore)/10)
+#    segment.writeDigit(4,int(AwayScore) % 10)
 
 
 ParseTeamNames()
