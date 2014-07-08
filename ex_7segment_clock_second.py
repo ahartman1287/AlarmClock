@@ -3,7 +3,7 @@
 import time,sys, traceback
 import datetime
 import re,decimal
-#from Adafruit_7Segment import SevenSegment
+from Adafruit_7Segment import SevenSegment
 import urllib2
 
 from xml.dom.minidom import parseString
@@ -102,29 +102,37 @@ def GetScores(MatchIdDictionary):
                 MatchScore=ExtractQuotes(line)
                 HomeScore=MatchScore['home_score']
                 AwayScore=MatchScore['away_score']
-    
+
     #determine whether game is live or not
     if (MatchScore['status']=="inprogress"):
         isGameLive=1
     elif (MatchScore['status']=="closed"):
-        isGameLive=1
+        isGameLive=0
     else:
+        isGameLive=0
         print "Cannot parse current game status"
-    
+        print "Game Does not appear to be live right now"
+        sys.exit(1)
     DisplayScores(HomeScore,AwayScore,MatchIdDictionary,isGameLive)
 
 def DisplayScores(HomeScore,AwayScore,MatchDictionary,isGameLive):
-    
+    segment = SevenSegment(address=0x70)
+
     while(isGameLive==True):
         print "SCORE: "+ str(HomeScore) + " TO " + str(AwayScore)
-        time.sleep(5)
+        segment.writeDigit(0,int(HomeScore)/10)
+        segment.writeDigit(1,int(HomeScore) % 10)
+        segment.writeDigit(3, int(AwayScore)/10)
+        segment.writeDigit(4,int(AwayScore) % 10)
+
+
+        time.sleep(20)
         GetScores(MatchDictionary)
     #just print game score just once if game is not live
     print "SCORE: "+ str(HomeScore) + " TO " + str(AwayScore)
 
 
-#segment = SevenSegment(address=0x70)
-# Continually update the time on a 4 char, 7-segment display
+    # Continually update the time on a 4 char, 7-segment display
 #while(True):
   #now = datetime.datetime.now()
   #hour = now.hour
@@ -142,11 +150,6 @@ def DisplayScores(HomeScore,AwayScore,MatchDictionary,isGameLive):
   #segment.setBrightLevel(second % 15)
   # Wait one second
   #time.sleep(1)
-
-#    segment.writeDigit(0,int(HomeScore)/10)
-#    segment.writeDigit(1,int(HomeScore) % 10)
-#    segment.writeDigit(3, int(AwayScore)/10)
-#    segment.writeDigit(4,int(AwayScore) % 10)
 
 
 ParseTeamNames()
